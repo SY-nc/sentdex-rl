@@ -449,13 +449,18 @@ class ModifiedTensorBoard(TensorBoard):
 
 # Agent class
 class DQNAgent:
-    def __init__(self): # init method for this model 
+    def __init__(self, model_path): # init method for this model 
 
 
     ## Two models: for stability and consistency to learn something because initially so much randomness
 
         # Main model # gets trained every step
-        self.model = self.create_model()
+        ##[satish, 2022-05-11] if model_path is not blank, load the model to continue training on it, 
+        #   otherwise, setup a new model
+        if not len(model_path) == 0:
+            self.model = keras.models.load_model(model_path)
+        else:
+            self.model = self.create_model()
 
         # Target model this is what we .predict against every step
         self.target_model = self.create_model() # This is the model that we are doing .predict every step 
@@ -563,10 +568,15 @@ class DQNAgent:
         return self.model.predict(np.array(state).reshape(-1, *state.shape)/255)[0]
 
 ## ADD: to do iteration and all
-agent = DQNAgent()
+## [satish, 2022-05-11] to continue training an existing model, 
+#       initialize the class 'DQNAgent' with argument model_path
+agent = DQNAgent("models/6.1.3-400-ep-done.model")
+
+#[satish, 2022-05-11] if training is to be started, set this to zero
+episodes_done = 400
 
 # Iterate over episodes
-for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit='episodes'): # ascii for windows fellows
+for episode in tqdm(range(episodes_done + 1, EPISODES + 1), ascii=True, unit='episodes'): # ascii for windows fellows
 
     # Update tensorboard step every episode
     agent.tensorboard.step = episode
