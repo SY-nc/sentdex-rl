@@ -458,7 +458,9 @@ class DQNAgent:
         ##[satish, 2022-05-11] if model_path is not blank, load the model to continue training on it, 
         #   otherwise, setup a new model
         if not len(model_path) == 0:
+            print("loading model from : "+ str(model_path))
             self.model = keras.models.load_model(model_path)
+            print("model load successful!")
         else:
             self.model = self.create_model()
 
@@ -575,6 +577,11 @@ agent = DQNAgent("models/6.1.3-400-ep-done.model")
 #[satish, 2022-05-11] if training is to be started, set this to zero
 episodes_done = 400
 
+if episodes_done == 0:
+    print("starting training from the beginning...")
+else:
+    print("continuing training from episode: " + str(episodes_done))
+    
 # Iterate over episodes
 for episode in tqdm(range(episodes_done + 1, EPISODES + 1), ascii=True, unit='episodes'): # ascii for windows fellows
 
