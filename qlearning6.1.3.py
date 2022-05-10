@@ -2,6 +2,7 @@ import numpy as np
 #import keras.backend.tensorflow_backend as backend
 import keras.backend as backend
 
+from keras import models
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatten
 # from keras.optimizers import Adam
@@ -459,7 +460,7 @@ class DQNAgent:
         #   otherwise, setup a new model
         if not len(model_path) == 0:
             print("loading model from : "+ str(model_path))
-            self.model = keras.models.load_model(model_path)
+            self.model = models.load_model(model_path)
             print("model load successful!")
         else:
             self.model = self.create_model()
@@ -581,10 +582,12 @@ if episodes_done == 0:
     print("starting training from the beginning...")
 else:
     print("continuing training from episode: " + str(episodes_done))
-    
+
 # Iterate over episodes
 for episode in tqdm(range(episodes_done + 1, EPISODES + 1), ascii=True, unit='episodes'): # ascii for windows fellows
 
+    print("current episode: " + str(episode))
+    
     # Update tensorboard step every episode
     agent.tensorboard.step = episode
 
