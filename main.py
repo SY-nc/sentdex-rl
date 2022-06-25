@@ -134,12 +134,10 @@ class Blob:
             return self.action(new_action_taken, last_action)
         
         if not isEnemy:
-            print("player's current choice: " + str(choice) + ", x and y increments: " + str(x) + str(y))
+            print("player's current choice: " + str(choice) + ", x and y increments: " + str(x) + ", " + str(y))
         # If no value for x, move randomly
         if(x == 0 and y == 0 and isEnemy):
             print("unexpected! Enemy chose no-movement, should be impossible")
-        # elif(x==0 and y==0):
-        #     print("no-movement chosen by player, expected")
         self.x += x
         self.y += y
 
