@@ -482,7 +482,7 @@ for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit='episodes'): # asci
 
         # Save model, but only when min reward is greater or equal a set value
         # if min_reward >= MIN_REWARD:
-        if episode % AGGREGATE_STATS_EVERY == 0:
+        if episode % 50 == 0:
             agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
     # Decay epsilon
