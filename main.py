@@ -55,34 +55,41 @@ class Blob:
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
-    def action(self, choice, last_action):
+    def action(self, choice, last_action=False, isEnemy=False):
         '''
         Gives us 9 total movement options. (0,1,2,3,4,5,6,7,8)
         '''
-        if choice == 8: ## For Constraint 
-            choice = np.random.randint(0, 8)
+        if not isEnemy:
+            isEnemy = 0
+
+        if choice == 8 and isEnemy: ## for enemy, we won't allow no-movement 
+            choice = np.random.randint(0, 7+1)
+
         if choice == 0:
-            new_action = self.move(last_action, choice, x=1, y=1)
+            new_action = self.move(last_action, choice, isEnemy, x=1, y=1)
         elif choice == 1:
-            new_action = self.move(last_action, choice, x=-1, y=-1)
+            new_action = self.move(last_action, choice, isEnemy, x=-1, y=-1)
         elif choice == 2:
-            new_action = self.move(last_action, choice, x=-1, y=1)
+            new_action = self.move(last_action, choice, isEnemy, x=-1, y=1)
         elif choice == 3:
-            new_action = self.move(last_action, choice, x=1, y=-1)
+            new_action = self.move(last_action, choice, isEnemy, x=1, y=-1)
 
         elif choice == 4:
-            new_action = self.move(last_action, choice, x=1, y=0)
+            new_action = self.move(last_action, choice, isEnemy, x=1, y=0)
         elif choice == 5:
-            new_action = self.move(last_action, choice, x=-1, y=0)
+            new_action = self.move(last_action, choice, isEnemy, x=-1, y=0)
 
         elif choice == 6:
-            new_action = self.move(last_action, choice, x=0, y=1)
+            new_action = self.move(last_action, choice, isEnemy, x=0, y=1)
         elif choice == 7:
-            new_action = self.move(last_action, choice, x=0, y=-1)
+            new_action = self.move(last_action, choice, isEnemy, x=0, y=-1)
+
+        elif choice == 8: ##for player, we will allow no-movement
+            new_action = self.move(last_action, choice, isEnemy, x=0, y=0)
 
         return new_action
 
-    def move(self, last_action, choice, x=False, y=False):
+    def move(self, last_action, choice, isEnemy = False, x=False, y=False):
         new_action_taken = choice
 
         illegal = []   ## For Constraint
@@ -126,7 +133,13 @@ class Blob:
             new_action_taken = legal[rand_index]
             return self.action(new_action_taken, last_action)
         
+        if not isEnemy:
+            print("player's current choice: " + str(choice) + ", x and y increments: " + str(x) + str(y))
         # If no value for x, move randomly
+        if(x == 0 and y == 0 and isEnemy):
+            print("unexpected! Enemy chose no-movement, should be impossible")
+        # elif(x==0 and y==0):
+        #     print("no-movement chosen by player, expected")
         self.x += x
         self.y += y
 
@@ -137,9 +150,9 @@ class Blob:
 class BlobEnv:
     SIZE = 10
     RETURN_IMAGES = True
-    MOVE_PENALTY = 1
+    MOVE_PENALTY = 20
     ENEMY_PENALTY = 300
-    FOOD_REWARD = 25
+    FOOD_REWARD = 500
     OBSERVATION_SPACE_VALUES = (SIZE, SIZE, 3)  # 4
     ACTION_SPACE_SIZE = 9
     PLAYER_N = 1  # player key in dict
@@ -160,12 +173,16 @@ class BlobEnv:
         self.enemy = Blob(self.SIZE)
         while self.enemy == self.player or self.enemy == self.food:
             self.enemy = Blob(self.SIZE)
+        self.enemy2 = Blob(self.SIZE)   #dynamic obstacle
+        while self.enemy2 == self.player or self.enemy2 == self.food or self.enemy2 == self.enemy:
+            self.enemy2 = Blob(self.SIZE)
 
         self.episode_step = 0
 
         if self.RETURN_IMAGES:
             observation = np.array(self.get_image())
         else:
+            #never reached
             observation = (self.player-self.food) + (self.player-self.enemy)
         return observation
 
@@ -174,7 +191,7 @@ class BlobEnv:
         choice = self.player.action(action, last_action)
 
         #### MAYBE ###
-        #self.enemy.move()
+        self.enemy2.action(8, -1, 1) #to move enemy at each step (dynamic obstacle case): choice 8 so that it randomizes enemy movement
         #self.food.move()
         ##############
 
@@ -182,9 +199,10 @@ class BlobEnv:
         if self.RETURN_IMAGES:
             new_observation = np.array(self.get_image())
         else:
+            #this line is never reached
             new_observation = (self.player-self.food) + (self.player-self.enemy)
 
-        if self.player == self.enemy:
+        if self.player == self.enemy or self.player == self.enemy2:
             reward = -self.ENEMY_PENALTY
         elif self.player == self.food:
             reward = self.FOOD_REWARD
@@ -195,7 +213,10 @@ class BlobEnv:
         if reward == self.FOOD_REWARD or self.episode_step >= 200: ## For Constraint
             done = True
 
-        return new_observation, reward, done, choice
+        if(choice == 8):
+            return new_observation, reward, done, last_action
+        else:
+            return new_observation, reward, done, choice
 
     def render(self): # RENDERING
         img = self.get_image()
@@ -212,6 +233,7 @@ class BlobEnv:
         env = np.zeros((self.SIZE, self.SIZE, 3), dtype=np.uint8)  # starts an rbg of our size
         env[self.food.x][self.food.y] = self.d[self.FOOD_N]  # sets the food location tile to green color
         env[self.enemy.x][self.enemy.y] = self.d[self.ENEMY_N]  # sets the enemy location to red
+        env[self.enemy2.x][self.enemy2.y] = self.d[self.ENEMY_N]  # sets the enemy2 location to red
         env[self.player.x][self.player.y] = self.d[self.PLAYER_N]  # sets the player tile to blue
         img = Image.fromarray(env, 'RGB')  # reading to rgb. Apparently. Even tho color definitions are bgr. ???
         return img
@@ -474,12 +496,12 @@ for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit='episodes'): # asci
     step = 1 # say we are on currently step no 1
 
     # Reset environment and get initial state
-    print("episode: "+ str(episode) + ": resetting env")
+    # print("episode: "+ str(episode) + ": resetting env")
     current_state = env.reset() # kind of matching the syntax from OpenAIGym
 
     # Reset flag and start iterating until episode ends
     done = False
-    print("episode: "+ str(episode) + ": starting 400 steps")
+    # print("episode: "+ str(episode) + ": starting steps")
     last_action = -1
     while not done:
 
@@ -507,7 +529,7 @@ for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit='episodes'): # asci
     print("terminal point reached, step count = " + str(step) + ", episode count = " + str(episode))
     
     # Append episode reward to a list and log stats (every given number of episodes)
-    print("episode: "+ str(episode) + ": appending ep rewards and logging on tensorboard...")
+    # print("episode: "+ str(episode) + ": appending ep rewards and logging on tensorboard...")
     ep_rewards.append(episode_reward)
     print("current rewards array: " + str(ep_rewards))
     if not episode % AGGREGATE_STATS_EVERY or episode == 1:
