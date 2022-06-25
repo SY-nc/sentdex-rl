@@ -41,10 +41,10 @@ SHOW_PREVIEW = False
 
 # ADD BLOB CLASS (Copy & Paste) 
 class Blob:
-    def __init__(self, size, xx, yy):
+    def __init__(self, size):
         self.size = size
-        self.x = xx
-        self.y = yy
+        self.x = np.random.randint(0, size)
+        self.y = np.random.randint(0, size)
 
     def __str__(self):
         return f"Blob ({self.x}, {self.y})"
@@ -59,9 +59,6 @@ class Blob:
         '''
         Gives us 9 total movement options. (0,1,2,3,4,5,6,7,8)
         '''
-        if choice == 8: ## For Constraint 
-            choice = np.random.randint(0, 8)
-        
         if choice == 0:
             self.move(x=1, y=1)
         elif choice == 1:
@@ -81,8 +78,8 @@ class Blob:
         elif choice == 7:
             self.move(x=0, y=-1)
 
-        # elif choice == 8:
-        #     self.move(x=0, y=0)
+        elif choice == 8:
+            self.move(x=0, y=0)
 
     def move(self, x=False, y=False):
 
@@ -98,43 +95,15 @@ class Blob:
         else:
             self.y += y
 
-        # If we are out of bounds, fix! ## For Constraint
-#        if self.x < 0:
-#            self.x = 0
-#        elif self.x > self.size-1:
-#            self.x = self.size-1
-#        if self.y < 0:
-#            self.y = 0
-#        elif self.y > self.size-1:
-#            self.y = self.size-1
-
-
-        illegal = []   ## For Constraint
+        # If we are out of bounds, fix!
         if self.x < 0:
-            illegal.append(1)
-            illegal.append(2)
-            illegal.append(5)
-        if self.x > self.size-1:
-            illegal.append(0)
-            illegal.append(3)
-            illegal.append(4)
+            self.x = 0
+        elif self.x > self.size-1:
+            self.x = self.size-1
         if self.y < 0:
-            illegal.append(1)
-            illegal.append(3)
-            illegal.append(7)
-        if self.y > self.size-1:
-            illegal.append(0)
-            illegal.append(2)
-            illegal.append(6)
-        if len(illegal) > 0:
-             
-            legal = []
-            for i in range(1, 7+1):
-                if(i not in illegal):
-                    legal.append(i)
-            rand_index = np.random.randint(0, len(legal))
-            new_action = legal[rand_index]
-            self.action(new_action)
+            self.y = 0
+        elif self.y > self.size-1:
+            self.y = self.size-1
 
 ### ADD Blob Environment (copy & paste)
 
@@ -155,9 +124,13 @@ class BlobEnv:
          3: (0, 0, 255)}
 
     def reset(self):
-        self.player = Blob(self.SIZE, 0, 0)
-        self.food = Blob(self.SIZE, 9, 9)
-        self.enemy = Blob(self.SIZE, 0, 9)
+        self.player = Blob(self.SIZE)
+        self.food = Blob(self.SIZE)
+        while self.food == self.player:
+            self.food = Blob(self.SIZE)
+        self.enemy = Blob(self.SIZE)
+        while self.enemy == self.player or self.enemy == self.food:
+            self.enemy = Blob(self.SIZE)
 
         self.episode_step = 0
 
@@ -190,7 +163,7 @@ class BlobEnv:
             reward = -self.MOVE_PENALTY
 
         done = False
-        if reward == self.FOOD_REWARD or self.episode_step >= 200: ## For Constraint
+        if reward == self.FOOD_REWARD or reward == -self.ENEMY_PENALTY or self.episode_step >= 200:
             done = True
 
         return new_observation, reward, done
@@ -238,9 +211,8 @@ if not os.path.isdir('models'):
 
 # ADDED Tensorboard class (from net sol.)## AttributeError: 'ModifiedTensorBoard' object has no attribute '_write_logs'
 # (modifying the tensorboard functionalities from Tensorflow and Keras): copied from text 
-
-# class ModifiedTensorBoard(TensorBoard):     
-   
+#class ModifiedTensorBoard(TensorBoard):     
+#    
 #    # Overriding init to set initial step and writer (we want one log file for all .fit() calls)                                     
 #    def __init__(self, **kwargs):
 #        super().__init__(**kwargs)
@@ -340,15 +312,6 @@ class DQNAgent:
         
         #self.model = models.load_model("./models/2x256____24.00max_-186.70avg_-490.00min__1654818493.model") ## Model for 1st PASS (10/06/2022,05:18)
         #self.model = models.load_model("./models/2x256____25.00max_-115.88avg_-444.00min__1654857443.model") ## Model for 2nd PASS (10/06/2022,16:07)
-        
-        #self.model = models.load_model("./models/2x256____25.00max_-269.77avg_-12758.00min__1655001850.model") ## Model for 1st PASS (12/06/2022,08:14)
-        #self.model = models.load_model("./models/2x256____25.00max_-195.81avg_-11263.00min__1655024713.model") ## Model for 2nd PASS (12/06/2022,14:35)
-        #self.model = models.load_model("./models/2x256____25.00max_-272.54avg_-10964.00min__1655056069.model") ## Model for 3rd PASS (12/06/2022,23:17)
-        #self.model = models.load_model("./models/2x256____25.00max_-245.34avg_-16047.00min__1655079956.model") ## Model for 4th PASS (13/06/2022,05:55)
-        
-        
-        #self.model = models.load_model("./models/2x256____50.00max__-71.88avg_-5496.00min__1655243335.model") ## Model for 1st PASS (15/06/2022,03:18)
-        
         #self.model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['accuracy']) ### Added for PASS (01/06/2022)
 
         # Target model this is what we .predict against every step
