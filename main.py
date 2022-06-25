@@ -59,7 +59,7 @@ class Blob:
         '''
         Gives us 9 total movement options. (0,1,2,3,4,5,6,7,8)
         '''
-        if choice == 8:
+        if choice == 8: ## For Constraint 
             choice = np.random.randint(0, 8)
         
         if choice == 0:
@@ -98,8 +98,18 @@ class Blob:
         else:
             self.y += y
 
-        # If we are out of bounds, fix!
-        illegal = []
+        # If we are out of bounds, fix! ## For Constraint
+#        if self.x < 0:
+#            self.x = 0
+#        elif self.x > self.size-1:
+#            self.x = self.size-1
+#        if self.y < 0:
+#            self.y = 0
+#        elif self.y > self.size-1:
+#            self.y = self.size-1
+
+
+        illegal = []   ## For Constraint
         if self.x < 0:
             illegal.append(1)
             illegal.append(2)
