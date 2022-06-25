@@ -35,7 +35,7 @@ EPSILON_DECAY = 0.99975
 MIN_EPSILON = 0.001
 
 # Stats settings
-AGGREGATE_STATS_EVERY = 500  #  episodes (step aggregation)
+AGGREGATE_STATS_EVERY = 50  #  episodes (step aggregation)
 # SHOW_PREVIEW = False # set to true if we want to actually see the visuals of everything running 
 SHOW_PREVIEW = False
 
@@ -344,7 +344,7 @@ class DQNAgent:
         model.add(Dense(64)) # 64 layers
 
         model.add(Dense(env.ACTION_SPACE_SIZE, activation='linear'))  # ACTION_SPACE_SIZE = how many choices (9)
-        model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['accuracy']) # we will track accuracy
+        model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=['mse']) ## Changes 'accuracy' to 'mse'
         return model
 
     # Adds step's data to a memory replay array
